@@ -21,6 +21,7 @@ baseurl = 'https://www.bodegaaurrera.com.mx/api/rest/model/atg/commerce/catalog/
 #for row in ws.iter_rows():
 #    lista_zip.append(row[0].value)
 lista_zip = list(np.arange(20000,83000,2))
+
 #add zipcodes to baseurl and put them into a list
 links=[]
 cont=0
@@ -28,28 +29,28 @@ for zip in lista_zip:
     url = baseurl + str(zip)
     links.append(url)
 cant_links = len(links)
-#for every link get data
+
+#for every link parse data
 pp_lista = []
 
 for link in links:
     cont=cont+1
     no_data = False
-        
+    #try not to overload the server    
     requests.adapters.DEFAULT_RETRIES = 99 # increase retries number
     s = requests.session()
     s.keep_alive = False # disable keep alive
-
+    
+    #request server
     req = s.get(link, timeout=None ,headers={'Connection':'keep-alive','user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36',
                     'Cookie':'Emaps-UserId=512bca3a-5ac7-4180-a6b9-c9fc401f48a1; ErMapsSession=CfDJ8Lq2Z91BaSJChMVYYzV0VY9Zc2Fljf8h6lM%2BI%2FeIjnUzboVnsgxB0UbH9Dz746zu5O%2Fd3swKclbsXx16qglTqLQgxD2SlCUSy8WLCrbL1C40tHLg%2FU2eGjMP4o1Hf66w6Br0CI9g7S5MrWh55ugfOwDH39wGkgg3RxIt5yMRKADa; TS0152d7f5=015b3bbaa3d8606636b883f3434815bb0d4011a78f81d14f5e836ed4ec611e42d7f87c892e3c5c5e03d8e6bf9aa453d0b1dfbd124f; _ga=GA1.2.1576151278.1656337339; _gid=GA1.2.319693535.1656337339; _gat=1; _gat_countryTracker=1'})
     soup = BeautifulSoup(req.text,"html.parser")
-                #parse a json string
+    #parse a json string
     try:
         data = json.loads(str(soup))
         data_len = len(data['storeDetails'])
             
-          #Avoid data that is empty
-    
-                #building the dictionary
+        #Avoid data that is empty        
         if int(cont) % 100 == 0:
                 for i in range(data_len):
                         try:
@@ -85,19 +86,8 @@ for link in links:
                         except KeyError: 
                             hours= np.nan
 
-                       #opening_hours =''
-                       # try:
-                       #     for x in range (len(hours)):
-                       #         if (hours[x]['HeureFermeturePM']) == None :
-                       #             opening_hours+= str(hours[x]['JourSemaine'])+ ' ' + str(hours[x]['HeureOuvertureAM']) +" - "+str(hours[x]['HeureFermetureAM'])
-                       #         else:
-                       #             opening_hours+= str(hours[x]['JourSemaine'])+ ' ' + str(hours[x]['HeureOuvertureAM']) +" - "+str(hours[x]['HeureFermeturePM'])+ ' break ' +\
-                       #             str(hours[x]['HeureFermetureAM'])+" - "+str(hours[x]['HeureOuverturePM']) + ' '
 
-                       # except TypeError:
-                       #     opening_hours+= None
-
-
+                        #send data to a dictionary 
                         feature = {
                                 'Name': name,
                                 'City':city,
@@ -109,7 +99,7 @@ for link in links:
                                 'Opening_hours':hours
                                 }
             
-                     #add dicc to the list
+                     #add dicc to the list pp_lista
                         pp_lista.append(feature)
                         
                     
@@ -117,6 +107,7 @@ for link in links:
                 print(cont,'from',cant_links)
                 time.sleep(20)
         else:
+                #alternarive to avoid overload the server
                 for i in range(data_len):
                         try:
                             name = data['storeDetails'][i]['name']
@@ -162,18 +153,6 @@ for link in links:
                             hours= 'Mo-Su 11:00-20:00'
                         except KeyError: 
                             hours= np.nan
-
-                       #opening_hours =''
-                       # try:
-                       #     for x in range (len(hours)):
-                       #         if (hours[x]['HeureFermeturePM']) == None :
-                       #             opening_hours+= str(hours[x]['JourSemaine'])+ ' ' + str(hours[x]['HeureOuvertureAM']) +" - "+str(hours[x]['HeureFermetureAM'])
-                       #         else:
-                       #             opening_hours+= str(hours[x]['JourSemaine'])+ ' ' + str(hours[x]['HeureOuvertureAM']) +" - "+str(hours[x]['HeureFermeturePM'])+ ' break ' +\
-                       #             str(hours[x]['HeureFermetureAM'])+" - "+str(hours[x]['HeureOuverturePM']) + ' '
-
-                       # except TypeError:
-                       #     opening_hours+= None
 
 
                         feature = {
